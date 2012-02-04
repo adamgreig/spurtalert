@@ -108,6 +108,8 @@ char lcd_char_spurt_4[8] = {0x0, 0xe, 0xb, 0x0, 0x0, 0x0, 0x0, 0x0};
 char lcd_char_spurt_5[8] = {0x10, 0x1b, 0x2, 0x0, 0xe, 0xe, 0xe, 0xe};
 char lcd_char_spurt_6[8] = {0x0, 0x0, 0xc, 0x6, 0x0, 0x0, 0x0, 0x0};
 
+boolean lcd_backlight = true;
+
 void lcd_clear() {
   Serial.write(0xFE);
   Serial.write(0x01);
@@ -117,13 +119,31 @@ void lcd_clear() {
 void lcd_line_one(int pos=0) {
   Serial.write(0xFE);
   Serial.write((char)(0x80 + pos));
-  //delay(200);
 }
 
 void lcd_line_two(int pos=0) {
   Serial.write(0xFE);
   Serial.write((char)(0xC0 + pos));
-  //delay(200);
+}
+
+void lcd_backlight_on() {
+  Serial.write(0x7C);
+  Serial.write(0x9D);
+  lcd_backlight = true;
+}
+
+void lcd_backlight_off() {
+  Serial.write(0x7C);
+  Serial.write(0x80);
+  lcd_backlight = false;
+}
+
+void lcd_toggle_backlight() {
+  if(lcd_backlight) {
+    lcd_backlight_off();
+  } else {
+    lcd_backlight_on();
+  }
 }
 
 void lcd_store_char(char address, char data[]) {
@@ -434,8 +454,8 @@ unsigned long last_hour = 0;
 
 boolean time_one_minute() {
   unsigned long delta = millis() - last_minute;
-  last_minute = millis();
   if(delta > 60000UL) {
+    last_minute = millis();
     return true;
   } else {
     return false;
@@ -444,8 +464,8 @@ boolean time_one_minute() {
 
 boolean time_one_hour() {
   unsigned long delta = millis() - last_hour;
-  last_hour = millis();
   if(delta > 3600000UL) {
+    last_hour = millis();
     return true;
   } else {
     return false;
@@ -541,6 +561,7 @@ void loop() {
       display_pressure();
     } else {
       sb_toggle_enabled();
+      lcd_toggle_backlight();
       display_pressure();
     }
   }
